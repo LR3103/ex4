@@ -470,6 +470,11 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
     if (testingBoard[startR][startC] > 0) 
         return 0;
 
+    // If we step on '5' but our counter is '3', this path is wrong. Stop now.
+    if (board[startR][startC] != 0 && board[startR][startC] > *moveMadeCounter) {
+        return 0;
+    }
+
     //if we get here
     //block this position.. to prevent passing it again
     testingBoard[startR][startC] = *moveMadeCounter;
@@ -511,7 +516,7 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
 
     // Try UP
     if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR - 1, startC, highest)) {
-        solution[startR][startC] = 'U'; // Fixed: changed 'R' to 'U'
+        solution[startR][startC] = 'U';
         return 1;
     }
 
