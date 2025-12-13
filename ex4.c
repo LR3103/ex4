@@ -53,6 +53,9 @@ int task4SolveZipBoardImplementation(int[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                                         char[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int, int, int, int);
 int task5SolveSudokuImplementation(int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
 
+int checkSequence(int , int , int size, int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int);
+
+
 
 /******************************
 * HELPER FUNCTIONS PROTOTYPES *
@@ -546,7 +549,131 @@ int task4SolveZipBoardImplementation(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_S
 }
 
 
+
+int checkInRow(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+    if (col == size){
+        return 0;
+    }
+    if (board[row][col] == val){
+        return 1;
+    }
+    return checkInRow(row, col + 1, size, val, board);
+}
+
+int checkInCol(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+    if (row == size){
+        return 0;
+    }
+    if (board[row][col] == val){
+        return 1;
+    }
+    return checkInCol(row + 1, col, size, val, board);
+}
+
+int checkInBox(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+    // 3. Check the 3x3 box
+    const int boxSize = 3;
+    int startRow = row - (row % boxSize); 
+    int startCol = col - (col % boxSize);
+
+    return (
+        checkInCol(startRow, startCol, startRow + 3, val, board) || 
+        checkInCol(startRow, startCol + 1, startRow + 3, val, board) || 
+        checkInCol(startRow, startCol + 2, startRow + 3, val, board)
+    );
+}
+
+int isPresentInBounds(int currentRow, int currentCol, int val, int size, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+    //check col
+    if (checkInCol(0, currentCol, size, val, board)){
+        return 1;
+    }
+    //check row
+     if (checkInRow(currentRow, 0, size, val, board)){
+        return 1;
+    }
+    //check box
+    if (checkInBox(currentRow, currentCol, size, val, board)){
+        return 1;
+    }
+
+    return 0;
+}
+
+
+int optionIterator(int currentRow, int currentCol, int size, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int leftToFill, int value, int maxVal){
+    if (value > maxVal) // base case
+        return 0;
+
+    //check for value
+    if (!isPresentInBounds(currentRow, currentCol, value, size, board)){
+        //add the value to the board
+        board[currentRow][currentCol] = value;
+        if (checkSequence(currentRow, currentCol + 1, size, board, toFillValues, leftToFill - 1))
+            return 1;
+    }
+
+    //if not check for the next value
+    return optionIterator(currentRow, currentCol, size, board, toFillValues, leftToFill, value + 1, maxVal);
+}
+
+
+int checkSequence(int currentRow, int currentCol, int size, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int leftToFill){
+    if (leftToFill == 0){
+        // filled all the missing values, so the board is full
+        //in fact, if we got here it means we filled the board correctly
+        //there fre we return true
+        return 1;
+    }
+    //if illegal position, it means we got to the end of a certain row, move to the begining of the next row
+    if ((currentCol == size)){
+        return checkSequence(currentRow + 1, 0, size, board, toFillValues, leftToFill);
+    }
+    // if the board is not filled
+    //first check if the current position has to be filled
+    if (!(toFillValues[currentRow][currentCol])){
+        //if we don't have to fill anything
+        return checkSequence(currentRow, currentCol + 1, size, board, toFillValues, leftToFill); //still we have left leftTofill values to fill.
+        //move to the next column in the same row
+    }
+   
+    if (optionIterator(currentRow, currentCol, size, board, toFillValues, leftToFill, 1, 9)){
+        return 1;
+    }
+
+    //nothing worked so we return false
+    board[currentRow][currentCol] = 0;
+    return 0;
+
+}
+
+void initializeHelpers(int row, int col, int size, int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int * amoutPlacesToFill, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+    if (row == size)//got to the end of the array
+        return;
+    
+    if (col >= size){
+        //got to the end of a row
+        initializeHelpers(row + 1, 0, size, toFillValues, amoutPlacesToFill, board);
+        return;
+    }
+    
+    if (board[row][col] == 0){
+        (*amoutPlacesToFill)++;
+        toFillValues[row][col] = 1;
+    }//need to be filled
+
+    //move to the next index in the row
+    initializeHelpers(row, col + 1, size, toFillValues, amoutPlacesToFill, board);
+}
+
 int task5SolveSudokuImplementation(int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE])
 {
-    return 0;
+    int size = SUDOKU_GRID_SIZE;
+    //to fill
+    //also count how many values to fill
+    int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE] = {0};
+    int amoutPlacesToFill = 0;
+    int * amountPtr = &amoutPlacesToFill;
+    initializeHelpers(0, 0, size, toFillValues, amountPtr, board);    
+    return checkSequence(0, 0, size, board, toFillValues, amoutPlacesToFill);
 }
