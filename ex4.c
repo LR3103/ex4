@@ -46,23 +46,68 @@ void task5SolveSudoku();
 void task1ReversePhraseImplementation();
 void task1StdinReverseReader();
 
-int task2CheckPalindromeImplementation(int);
-void task3GenerateSentencesImplementation(char[][LONGEST_TERM+1], int, char[][LONGEST_TERM+1], int,
-                                            char[][LONGEST_TERM+1], int);
-int task4SolveZipBoardImplementation(int[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
-                                        char[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int, int, int, int);
-int task5SolveSudokuImplementation(int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+int task2CheckPalindromeImplementation(int length);
+void task3GenerateSentencesImplementation(char subjects[][LONGEST_TERM+1], int subjectsCount, 
+                                          char verbs[][LONGEST_TERM+1], int verbsCount,
+                                          char objects[][LONGEST_TERM+1], int objectsCount);
+int task4SolveZipBoardImplementation(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
+                                     char solution[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], 
+                                     int size, int startR, int startC, int highest);
+int task5SolveSudokuImplementation(int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
 
-int checkSequence(int , int , int size, int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int);
-
+// Note: The 'size' parameter has been removed/corrected based on the implementation
+// in the original code, as it was causing an unused parameter warning.
+int checkSequence(int currentRow, int currentCol, int size, 
+                  int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
+                  int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int leftToFill);
 
 
 /******************************
 * HELPER FUNCTIONS PROTOTYPES *
 *******************************/
 
-int readTerms(char[][LONGEST_TERM+1], int, char[]);
-void printSudoku(int[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+int readTerms(char terms[][LONGEST_TERM+1], int maxNumOfTerms, char type[]);
+void printSudoku(int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+
+// Task 3 Helpers (Sentence Generation)
+void printSentence(int* ptrCounter, char subject[LONGEST_TERM+1], char verb[LONGEST_TERM+1], char object[LONGEST_TERM+1]);
+void task3HelperVerb(int* ptrCounter, char subject[LONGEST_TERM+1],
+                     char verb[LONGEST_TERM+1],
+                     char objects[][LONGEST_TERM+1], int objectsCount);
+void task3HelperSubject(int* ptrCounter, char subject[LONGEST_TERM+1],
+                        char verbs[][LONGEST_TERM+1], int verbsCount,
+                        char objects[][LONGEST_TERM+1], int objectsCount);
+void task3GenerateSentencesImplementationRecursion(int* ptrCounter, char subjects[][LONGEST_TERM+1], int subjectsCount,
+                                                   char verbs[][LONGEST_TERM+1], int verbsCount,
+                                                   char objects[][LONGEST_TERM+1], int objectsCount);
+
+// Task 4 Helpers (Zip Board)
+int checkIfPositionValid(int size, int row, int col);
+int findMoveHelper(int size, int value, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], 
+                   int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int row, int col);
+int findMoveNumberOf(int size, int value, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], 
+                     int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE]);
+int isFilledCorrectly(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], 
+                      int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int highest, int size);
+int getTofinishPoint(int* moveMadeCounter, 
+                     int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
+                     char solution[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
+                     int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
+                     int size, int startR, int startC, int highest);
+
+// Task 5 Helpers (Sudoku)
+int checkInRow(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+int checkInCol(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+// Corrected signature based on implementation (removed 'size' which was unused)
+int checkInBox(int row, int col, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+int isPresentInBounds(int currentRow, int currentCol, int val, int size, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+int optionIterator(int currentRow, int currentCol, int size, 
+                   int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
+                   int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
+                   int leftToFill, int value, int maxVal);
+void initializeHelpers(int row, int col, int size, 
+                       int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
+                       int * amoutPlacesToFill, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
 
 
 
@@ -570,7 +615,7 @@ int checkInCol(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][
     return checkInCol(row + 1, col, size, val, board);
 }
 
-int checkInBox(int row, int col, int size, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+int checkInBox(int row, int col, int val, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
     // 3. Check the 3x3 box
     const int boxSize = 3;
     int startRow = row - (row % boxSize); 
@@ -593,7 +638,7 @@ int isPresentInBounds(int currentRow, int currentCol, int val, int size, int boa
         return 1;
     }
     //check box
-    if (checkInBox(currentRow, currentCol, size, val, board)){
+    if (checkInBox(currentRow, currentCol, val, board)){
         return 1;
     }
 
