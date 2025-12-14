@@ -463,7 +463,9 @@ int findMoveHelper(int size, int value, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRI
 
     // Check the current cell
     if (board[row][col] == value) {
-        return testingBoard[row][col];
+        if (testingBoard[row][col] > 0) {
+            return testingBoard[row][col];
+        }
     }
 
     // If we are at the end of a row (col + 1 == size), move to the next row (row + 1) and reset col to 0
@@ -483,8 +485,8 @@ int findMoveNumberOf(int size, int value, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_G
 
 int isFilledCorrectly(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int highest, int size){
     // We assume if we got this far, 1 is present and valid.
-    if (highest <= 1){
-        return findMoveNumberOf(size, highest, board, testingBoard) != -1;
+    if (highest == 1){
+        return 1;
     }
 
     // Find the move number for the current highest value
@@ -544,21 +546,18 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
         }
         //3. if the board is full check if we went according to the rules
         if (isFilledCorrectly(board, testingBoard, highest, size)){
-            return 1; //if we did both we win
-
+            return 1;
         }
-        //continue searching
-    }
-   
-    //if position valid, but we did not fill board accordingly or did not get to the destenation, check next positions
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC + 1, highest)) {
-        solution[startR][startC] = 'R'; // Mark direction
-        return 1;
+
+        //unblock position
+        (*moveMadeCounter)--;
+        testingBoard[startR][startC] = 0;
+        return 0;
     }
 
-    // Try LEFT
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC - 1, highest)) {
-        solution[startR][startC] = 'L';
+    // Try DOWN
+    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR + 1, startC, highest)) {
+        solution[startR][startC] = 'D';
         return 1;
     }
 
@@ -568,9 +567,15 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
         return 1;
     }
 
-    // Try DOWN
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR + 1, startC, highest)) {
-        solution[startR][startC] = 'D';
+    // Try LEFT
+    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC - 1, highest)) {
+        solution[startR][startC] = 'L';
+        return 1;
+    }
+   
+    //if position valid, but we did not fill board accordingly or did not get to the destenation, check next positions
+    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC + 1, highest)) {
+        solution[startR][startC] = 'R'; // Mark direction
         return 1;
     }
 
@@ -589,8 +594,8 @@ int task4SolveZipBoardImplementation(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_S
     int moves = 1;
     int *moveMadeCounter = &moves;
     int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE] = {0};
-    return getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC, highest);
-        
+    int result = getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC, highest);
+    return result;
 }
 
 
