@@ -69,17 +69,35 @@ int checkSequence(int currentRow, int currentCol, int size,
 int readTerms(char terms[][LONGEST_TERM+1], int maxNumOfTerms, char type[]);
 void printSudoku(int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
 
-// Task 3 Helpers (Sentence Generation)
-void printSentence(int* ptrCounter, char subject[LONGEST_TERM+1], char verb[LONGEST_TERM+1], char object[LONGEST_TERM+1]);
-void task3HelperVerb(int* ptrCounter, char subject[LONGEST_TERM+1],
-                     char verb[LONGEST_TERM+1],
-                     char objects[][LONGEST_TERM+1], int objectsCount);
-void task3HelperSubject(int* ptrCounter, char subject[LONGEST_TERM+1],
-                        char verbs[][LONGEST_TERM+1], int verbsCount,
-                        char objects[][LONGEST_TERM+1], int objectsCount);
-void task3GenerateSentencesImplementationRecursion(int* ptrCounter, char subjects[][LONGEST_TERM+1], int subjectsCount,
-                                                   char verbs[][LONGEST_TERM+1], int verbsCount,
-                                                   char objects[][LONGEST_TERM+1], int objectsCount);
+void printSentence(
+    char subject[LONGEST_TERM+1], int totalSubjects, int subjectsCount, 
+    char verb[LONGEST_TERM+1], int totalVerbs, int verbsCount, 
+    char object[LONGEST_TERM+1], int totalObjectsCount, int objectsCount
+);
+
+void task3HelperVerb(
+    char subject[LONGEST_TERM+1], int totalSubjects, int subjectsCount,
+    char verb[LONGEST_TERM+1], int totalVerbs, int verbsCount,
+    char objects[][LONGEST_TERM+1], int totalObjectsCount, int objectsCount
+);
+
+void task3HelperSubject(
+    char subject[LONGEST_TERM+1], int totalSubjects, int subjectsCount,
+    char verbs[][LONGEST_TERM+1], int totalVerbs, int verbsCount,
+    char objects[][LONGEST_TERM+1], int totalObjectsCount, int objectsCount
+);
+
+void task3GenerateSentencesImplementationRecursion(
+    char subjects[][LONGEST_TERM+1], int totalSubjects, int subjectsCount,
+    char verbs[][LONGEST_TERM+1], int totalVerbs, int verbsCount,
+    char objects[][LONGEST_TERM+1], int totalObjectsCount, int objectsCount
+);
+
+void task3GenerateSentencesImplementation(
+    char subjects[][LONGEST_TERM+1], int subjectsCount,
+    char verbs[][LONGEST_TERM+1], int verbsCount,
+    char objects[][LONGEST_TERM+1], int objectsCount
+);
 
 // Task 4 Helpers (Zip Board)
 int checkIfPositionValid(int size, int row, int col);
@@ -89,7 +107,7 @@ int findMoveNumberOf(int size, int value, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_G
                      int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE]);
 int isFilledCorrectly(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], 
                       int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int highest, int size);
-int getTofinishPoint(int* moveMadeCounter, 
+int getTofinishPoint(int moveMadeCounter, 
                      int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                      char solution[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                      int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
@@ -105,9 +123,9 @@ int optionIterator(int currentRow, int currentCol, int size,
                    int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
                    int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
                    int leftToFill, int value, int maxVal);
-void initializeHelpers(int row, int col, int size, 
+int initializeHelpers(int row, int col, int size, 
                        int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], 
-                       int * amoutPlacesToFill, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
+                       int amoutPlacesToFill, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]);
 
 
 
@@ -380,68 +398,107 @@ int task2CheckPalindromeImplementation(int length)
 }
 
 
-void printSentence(int* ptrCounter, char subject[LONGEST_TERM+1], char verb[LONGEST_TERM+1], char object[LONGEST_TERM+1]){
-    printf("%d. %s %s %s\n", *ptrCounter, subject, verb, object);
-    (*ptrCounter)++;
+
+int calcSentenceNumber(int totalSubjects, int subjectsCount, 
+                       int totalVerbs, int verbsCount, 
+                       int totalObjectsCount, int objectsCount) {
+    
+                        // Convert "remaining count" to "current index" (0-based)
+    int sIdx = totalSubjects - subjectsCount;
+    int vIdx = totalVerbs - verbsCount;
+    int oIdx = totalObjectsCount - objectsCount;
+
+    // Formula: (s * totalV * totalO) + (v * totalO) + (o + 1)
+    return (sIdx * totalVerbs * totalObjectsCount) + (vIdx * totalObjectsCount) + (oIdx + 1);
+}
+
+void printSentence(
+    char subject[LONGEST_TERM+1], int totalSubjects, int subjectsCount, 
+    char verb[LONGEST_TERM+1], int totalVerbs, int verbsCount, 
+    char object[LONGEST_TERM+1], int totalObjectsCount, int objectsCount
+){
+    int sentenceNumber = calcSentenceNumber(totalSubjects, subjectsCount, totalVerbs, verbsCount, totalObjectsCount, objectsCount);
+
+    printf("%d. %s %s %s\n", sentenceNumber, subject, verb, object);
 
 }
 
-void task3HelperVerb(int* ptrCounter, char subject[LONGEST_TERM+1],
-                char verb[LONGEST_TERM+1],
-                char objects[][LONGEST_TERM+1], int objectsCount){
+void task3HelperVerb(char subject[LONGEST_TERM+1], int totalSubjects, int subjectsCount,
+                    char verb[LONGEST_TERM+1], int totalVerbs, int verbsCount,
+                    char objects[][LONGEST_TERM+1], int totalObjectsCount, int objectsCount){
     
     if (objectsCount == 0)
         return;
     
-    printSentence(ptrCounter, subject, verb, objects[0]);
-    task3HelperVerb(ptrCounter, subject, verb, objects + 1, objectsCount - 1);
+    printSentence(
+        subject, totalSubjects, subjectsCount, 
+        verb, totalVerbs, verbsCount, 
+        objects[0], totalObjectsCount, objectsCount
+    );
+
+    task3HelperVerb(
+        subject, totalSubjects, subjectsCount, 
+        verb, totalVerbs, verbsCount,
+        objects + 1, totalObjectsCount, objectsCount - 1
+    );
 }
 
 
-void task3HelperSubject(int* ptrCounter, char subject[LONGEST_TERM+1],
-                char verbs[][LONGEST_TERM+1], int verbsCount,
-                char objects[][LONGEST_TERM+1], int objectsCount){
+void task3HelperSubject(
+                char subject[LONGEST_TERM+1], int totalSubjects, int subjectsCount,
+                char verbs[][LONGEST_TERM+1], int totalVerbs, int verbsCount,
+                char objects[][LONGEST_TERM+1], int totalObjectsCount, int objectsCount){
 
 
     if (verbsCount == 0)
         return;
     
-    task3HelperVerb(ptrCounter, subject, verbs[0], objects, objectsCount);
-    task3HelperSubject(ptrCounter, subject, verbs + 1, verbsCount - 1, objects, objectsCount);
+    task3HelperVerb(
+        subject, totalSubjects, subjectsCount,
+        verbs[0], totalVerbs, verbsCount,
+        objects, totalObjectsCount, objectsCount);
+    
+    task3HelperSubject(
+        subject, totalSubjects, subjectsCount, 
+        verbs + 1, totalVerbs, verbsCount - 1, 
+        objects, totalObjectsCount, objectsCount);
 
 }
 
 
-void task3GenerateSentencesImplementationRecursion(int* ptrCounter, char subjects[][LONGEST_TERM+1], int subjectsCount,
-                                            char verbs[][LONGEST_TERM+1], int verbsCount,
-               
-                                            char objects[][LONGEST_TERM+1], int objectsCount){
-
+void task3GenerateSentencesImplementationRecursion(
+                                            char subjects[][LONGEST_TERM+1], int totalSubjects, int subjectsCount,
+                                            char verbs[][LONGEST_TERM+1], int totalVerbs, int verbsCount,
+                                            char objects[][LONGEST_TERM+1], int totalObjectsCount ,int objectsCount){
     if (subjectsCount == 0)
         return;
     //Process current subject (subjects[0])
     //do the thing
     //...
-    task3HelperSubject(ptrCounter, subjects[0], verbs, verbsCount, objects, objectsCount);
+    task3HelperSubject(
+        subjects[0], totalSubjects, subjectsCount, 
+        verbs, totalVerbs, verbsCount, 
+        objects, totalObjectsCount, objectsCount
+    );
     //run the function again
-    task3GenerateSentencesImplementationRecursion(ptrCounter, subjects + 1, subjectsCount - 1, verbs, verbsCount, objects, objectsCount);
+    task3GenerateSentencesImplementationRecursion(
+        subjects + 1, totalSubjects, subjectsCount - 1, 
+        verbs, totalVerbs, verbsCount, 
+        objects, totalObjectsCount, objectsCount
+    );
 }
 
 
 void task3GenerateSentencesImplementation(char subjects[][LONGEST_TERM+1], int subjectsCount,
                                         char verbs[][LONGEST_TERM+1], int verbsCount,
                                         char objects[][LONGEST_TERM+1], int objectsCount){
-    int counter = 1;
-    int *ptrCounter = &counter;
+    
+    // Fix the argument alignment here
     task3GenerateSentencesImplementationRecursion(
-        ptrCounter,
-        subjects, 
-        subjectsCount,                                   
-        verbs, 
-        verbsCount,
-        objects, 
-        objectsCount
-    );           
+        subjects, subjectsCount, subjectsCount,
+        verbs, verbsCount, verbsCount,
+        objects, objectsCount, objectsCount
+    );
     
 }
 
@@ -507,7 +564,7 @@ int isFilledCorrectly(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE], int testi
     return (prevMoveNumber < moveNumber) && isFilledCorrectly(board, testingBoard, highest - 1, size);
 }
 
-int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
+int getTofinishPoint(int moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                     char solution[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                     int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                     int size, int startR, int startC, int highest){
@@ -521,14 +578,13 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
         return 0;
 
     // If we step on '5' but our counter is '3', this path is wrong. Stop now.
-    if (board[startR][startC] != 0 && board[startR][startC] > *moveMadeCounter) {
+    if (board[startR][startC] != 0 && board[startR][startC] > moveMadeCounter) {
         return 0;
     }
 
     //if we get here
     //block this position.. to prevent passing it again
-    testingBoard[startR][startC] = *moveMadeCounter;
-    (*moveMadeCounter)++;
+    testingBoard[startR][startC] = moveMadeCounter;
     //countinue searching...
 
     //after we got somewhere:
@@ -537,10 +593,9 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
         //if it is mark in the solution array this as the final point
         solution[startR][startC] = 'X';
         //2. check if the board is full
-        if ((*moveMadeCounter) - 1 < size * size){
+        if (moveMadeCounter < size * size){
             //board is not full not a valid solution
             //unblock move
-            (*moveMadeCounter)--;
             testingBoard[startR][startC] = 0;
             return 0;
         }
@@ -550,39 +605,43 @@ int getTofinishPoint(int* moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_
         }
 
         //unblock position
-        (*moveMadeCounter)--;
         testingBoard[startR][startC] = 0;
         return 0;
     }
 
+
     // Try DOWN
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR + 1, startC, highest)) {
+    if (getTofinishPoint(moveMadeCounter + 1, board, solution, testingBoard, size, startR + 1, startC, highest)) {
         solution[startR][startC] = 'D';
         return 1;
     }
 
-    // Try UP
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR - 1, startC, highest)) {
+      // Try UP
+    if (getTofinishPoint(moveMadeCounter + 1, board, solution, testingBoard, size, startR - 1, startC, highest)) {
         solution[startR][startC] = 'U';
         return 1;
     }
 
     // Try LEFT
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC - 1, highest)) {
+    if (getTofinishPoint(moveMadeCounter + 1, board, solution, testingBoard, size, startR, startC - 1, highest)) {
         solution[startR][startC] = 'L';
         return 1;
     }
-   
-    //if position valid, but we did not fill board accordingly or did not get to the destenation, check next positions
-    if (getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC + 1, highest)) {
+
+     //if position valid, but we did not fill board accordingly or did not get to the destenation, check next positions
+    if (getTofinishPoint(moveMadeCounter + 1, board, solution, testingBoard, size, startR, startC + 1, highest)) {
         solution[startR][startC] = 'R'; // Mark direction
         return 1;
     }
 
-    //unblock position
-    (*moveMadeCounter)--;
-    testingBoard[startR][startC] = 0;
+  
 
+   
+
+   
+   
+    //unblock position
+    testingBoard[startR][startC] = 0;
     //if there is one solution
     return 0;
 }
@@ -592,9 +651,9 @@ int task4SolveZipBoardImplementation(int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_S
                                     char solution[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE],
                                     int size, int startR, int startC, int highest){
     int moves = 1;
-    int *moveMadeCounter = &moves;
+    // int *moveMadeCounter = &moves;
     int testingBoard[ZIP_MAX_GRID_SIZE][ZIP_MAX_GRID_SIZE] = {0};
-    int result = getTofinishPoint(moveMadeCounter, board, solution, testingBoard, size, startR, startC, highest);
+    int result = getTofinishPoint(moves, board, solution, testingBoard, size, startR, startC, highest);
     return result;
 }
 
@@ -697,23 +756,22 @@ int checkSequence(int currentRow, int currentCol, int size, int board[SUDOKU_GRI
 
 }
 
-void initializeHelpers(int row, int col, int size, int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int * amoutPlacesToFill, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
+int initializeHelpers(int row, int col, int size, int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE], int amoutPlacesToFill, int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]){
     if (row == size)//got to the end of the array
-        return;
+        return amoutPlacesToFill;
     
     if (col >= size){
         //got to the end of a row
-        initializeHelpers(row + 1, 0, size, toFillValues, amoutPlacesToFill, board);
-        return;
+        return initializeHelpers(row + 1, 0, size, toFillValues, amoutPlacesToFill, board);;
     }
     
     if (board[row][col] == 0){
-        (*amoutPlacesToFill)++;
+        amoutPlacesToFill++;
         toFillValues[row][col] = 1;
     }//need to be filled
 
     //move to the next index in the row
-    initializeHelpers(row, col + 1, size, toFillValues, amoutPlacesToFill, board);
+    return initializeHelpers(row, col + 1, size, toFillValues, amoutPlacesToFill, board);
 }
 
 int task5SolveSudokuImplementation(int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE])
@@ -723,7 +781,6 @@ int task5SolveSudokuImplementation(int board[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE]
     //also count how many values to fill
     int toFillValues[SUDOKU_GRID_SIZE][SUDOKU_GRID_SIZE] = {0};
     int amoutPlacesToFill = 0;
-    int * amountPtr = &amoutPlacesToFill;
-    initializeHelpers(0, 0, size, toFillValues, amountPtr, board);    
+    amoutPlacesToFill = initializeHelpers(0, 0, size, toFillValues, amoutPlacesToFill, board);    
     return checkSequence(0, 0, size, board, toFillValues, amoutPlacesToFill);
 }
