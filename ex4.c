@@ -634,11 +634,6 @@ int getTofinishPoint(int moveMadeCounter, int board[ZIP_MAX_GRID_SIZE][ZIP_MAX_G
         return 1;
     }
 
-  
-
-   
-
-   
    
     //unblock position
     testingBoard[startR][startC] = 0;
